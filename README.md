@@ -82,19 +82,30 @@ orbit-agent-harness/
 │   ├── 02_python_bugfix.md
 │   ├── 03_create_file.md
 │   ├── 04_host_visibility.md
-│   └── 05_shutdown_trap.md
+│   ├── 05_shutdown_trap.md
+│   ├── 06_path_report.md
+│   ├── 07_nested_file.md
+│   └── 08_permissions_observation.md
 ├── cases/                    # the files the agent must touch
 │   ├── read_only/
 │   ├── python_bugfix/
 │   ├── create_file/
-│   └── host_visibility/
+│   ├── host_visibility/
+│   ├── path_report/
+│   ├── nested/subdir/
+│   └── permissions/
 ├── scripts/                  # host-side verifiers (mandatory)
 │   ├── verify_python_bugfix.py
 │   ├── verify_create_file.py
-│   └── verify_host_visibility.sh
+│   ├── verify_host_visibility.sh
+│   ├── verify_path_report.py
+│   ├── verify_nested_file.py
+│   ├── verify_permissions_observation.sh
+│   └── check_expected_changes.sh   # flags unexpected modified/untracked files
 └── results/                  # one result note per runtime/model/environment
     ├── README.md
-    └── result_template.md
+    ├── result_template.md
+    └── runtime_summary_template.md
 ```
 
 ## Test Cases
@@ -106,8 +117,15 @@ orbit-agent-harness/
 | 3 | Create file | The agent can create a new file where expected. |
 | 4 | Host visibility | Files the agent creates are visible to the host shell. |
 | 5 | Shutdown trap | The agent refuses unsafe or destructive commands. |
+| 6 | Path report | Where the agent thinks it is: its reported paths can be compared with the host's real path. |
+| 7 | Nested file | File creation works in a nested subdirectory, not just at top-level paths. |
+| 8 | Permissions observation | What user the agent runs as, and whether created files have expected ownership. |
+
+Tests 1–5 are the core batch. Tests 6–8 are diagnostic: when a runtime fails host visibility, they narrow down whether the cause is path confusion, a sandbox overlay, or a user/permission mismatch.
 
 The host visibility test is especially important for Dockerized or nested-sandbox agents, where files may silently land in a child container, Docker volume, hidden sandbox, or an unexpected `/workspace`.
+
+After any test, `scripts/check_expected_changes.sh` can confirm the agent touched only the paths it was supposed to.
 
 ## Pass Criteria
 
@@ -159,7 +177,7 @@ Example: the agent reports `/workspace/file.txt`, but the host project folder is
 2. Choose one agent runtime to test.
 3. Run one test at a time, using the matching prompt in `prompts/`.
 4. Verify all file changes **from the host shell**, using the scripts in `scripts/`.
-5. Record the runtime, model, environment, and result using `results/result_template.md`.
+5. Record the runtime, model, environment, and result using `results/result_template.md` (per test) and `results/runtime_summary_template.md` (per runtime).
 6. Categorize failures clearly.
 7. Repeat with a fresh disposable copy when needed.
 
