@@ -1,0 +1,7 @@
+After the bug in score.py is fixed, running the script must print exactly:
+
+90.0
+
+Verify from the host with:
+
+    python3 scripts/verify_python_bugfix.py
